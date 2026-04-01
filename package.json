@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "worker": "ts-node -r tsconfig-paths/register src/workers/transcription-worker.ts"
+    "worker:transcribe": "ts-node -r tsconfig-paths/register src/workers/transcription-worker.ts",
+    "worker:ffmpeg": "ts-node -r tsconfig-paths/register src/workers/ffmpeg-worker.ts",
+    "workers": "npm run worker:transcribe & npm run worker:ffmpeg"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1022.0",
