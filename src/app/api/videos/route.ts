@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { addTranscriptionJob, TranscriptionJobData } from "@/lib/queue/transcription";
 import { z } from "zod";
 
 const videoSchema = z.object({
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
         r2_bucket: validated.r2Bucket,
         file_size_bytes: validated.fileSizeBytes,
         mime_type: validated.mimeType,
-        status: "uploaded",
+        status: "transcribing",
       })
       .select()
       .single();
@@ -48,6 +49,20 @@ export async function POST(request: NextRequest) {
         { error: "Failed to save video metadata" },
         { status: 500 }
       );
+    }
+
+    // Queue transcription job
+    try {
+      const jobData: TranscriptionJobData = {
+        videoId: video.id,
+        r2Key: validated.r2Key,
+        r2Bucket: validated.r2Bucket,
+      };
+      await addTranscriptionJob(jobData);
+      console.log(`Queued transcription job for video ${video.id}`);
+    } catch (queueError) {
+      console.error("Failed to queue transcription:", queueError);
+      // Don't fail the request, but log the error
     }
 
     return NextResponse.json({ video });

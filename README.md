@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ClipIQ
+
+**The AI Video Editor That Talks Back**
+
+Edit videos using natural language commands. Upload, transcribe, and transform your content with simple prompts.
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 + Tailwind 4 + shadcn/ui
+- **Backend**: Supabase (Auth + PostgreSQL)
+- **Storage**: Cloudflare R2
+- **Queue**: Bull + Redis
+- **Transcription**: faster-whisper
+- **Video Processing**: FFmpeg
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- Python 3.9+ (for Whisper)
+- Redis
+- Supabase account
+- Cloudflare R2 bucket
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env.local
+
+# Edit .env.local with your credentials
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Cloudflare R2
+R2_ACCOUNT_ID=your-r2-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=clipiq-videos
 
-## Learn More
+# Redis
+REDIS_URL=redis://localhost:6379
 
-To learn more about Next.js, take a look at the following resources:
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Database Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Create a Supabase project
+2. Enable Google OAuth in Authentication → Providers
+3. Enable Apple OAuth in Authentication → Providers
+4. Run the SQL in `supabase/schema.sql` in the Supabase SQL Editor
 
-## Deploy on Vercel
+### Running the App
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Start the development server
+npm run dev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Start Redis (if not already running)
+brew services start redis  # macOS
+# or
+docker run -d -p 6379:6379 redis  # Docker
+```
+
+### Running the Transcription Worker
+
+The transcription worker runs separately to process video uploads:
+
+```bash
+# Install faster-whisper (Python)
+pip install faster-whisper
+
+# Start the worker
+npx ts-node src/workers/transcription-worker.ts
+```
+
+Or in development:
+
+```bash
+npm run worker
+```
+
+## Project Structure
+
+```
+clipiq/
+├── src/
+│   ├── app/              # Next.js App Router
+│   │   ├── api/          # API routes
+│   │   ├── dashboard/    # Dashboard page
+│   │   ├── login/        # Login page
+│   │   ├── signup/       # Signup page
+│   │   └── editor/       # Video editor (WIP)
+│   ├── components/       # React components
+│   │   ├── ui/           # shadcn/ui components
+│   │   └── upload/       # Upload components
+│   ├── lib/              # Utilities
+│   │   ├── supabase/     # Supabase clients
+│   │   ├── r2/           # R2/S3 client
+│   │   └── queue/        # Bull queue config
+│   └── workers/          # Background workers
+├── supabase/             # Database schema
+└── .env.example          # Environment template
+```
+
+## Development
+
+```bash
+# Run linting
+npm run lint
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+## License
+
+MIT © 2026 ClipIQ
