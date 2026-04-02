@@ -76,7 +76,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid format", details: error.errors },
+        { error: "Invalid format", details: error.issues },
         { status: 400 }
       );
     }
