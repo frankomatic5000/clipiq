@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>MyClipIQ | The AI Video Editor That Talks Back</title>
+ <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+ <style>
+ :root {
+ --bg-dark: #09090b;
+ --card-bg: rgba(255, 255, 255, 0.03);
+ --border-color: rgba(255, 255, 255, 0.1);
+ --accent-violet: #8A2BE2;
+ --accent-lime: #a3ff00;
+ --text-main: #f4f4f5;
+ --text-muted: #a1a1aa;
+ }
+
+ * {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+ }
+
+ body {
+ background-color: var(--bg-dark);
+ color: var(--text-main);
+ font-family: 'Inter', sans-serif;
+ overflow-x: hidden;
+ line-height: 1.6;
+ }
+
+ /* Atmospheric Background Glows */
+ .glow {
+ position: absolute;
+ width: 40vw;
+ height: 40vw;
+ border-radius: 50%;
+ filter: blur(120px);
+ z-index: -1;
+ opacity: 0.15;
+ }
+ .glow-violet { top: -10%; right: -5%; background: var(--accent-violet); }
+ .glow-lime { bottom: -10%; left: -5%; background: var(--accent-lime); }
+
+ /* Navigation */
+ nav {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 2rem 5%;
+ max-width: 1400px;
+ margin: 0 auto;
+ }
+
+ .logo {
+ font-weight: 600;
+ font-size: 1.2rem;
+ letter-spacing: -0.5px;
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ }
+
+ .logo-icon {
+ width: 24px;
+ height: 24px;
+ background: var(--text-main);
+ mask: radial-gradient(circle, #fff 20%, transparent 25%), 
+ conic-gradient(from 0deg, transparent 0deg, #fff 10deg, transparent 20deg) repeat;
+ -webkit-mask: radial-gradient(circle, #fff 20%, transparent 25%), 
+ repeating-conic-gradient(from 0deg, #fff 0deg 1deg, transparent 1deg 15deg);
+ }
+
+ .nav-links a {
+ color: var(--text-muted);
+ text-decoration: none;
+ font-size: 0.9rem;
+ margin-left: 2rem;
+ transition: color 0.3s;
+ }
+
+ .nav-links a:hover { color: var(--text-main); }
+
+ /* Hero Section */
+ .hero {
+ text-align: center;
+ padding: 8rem 5% 4rem;
+ max-width: 900px;
+ margin: 0 auto;
+ }
+
+ h1 {
+ font-family: 'Instrument Serif', serif;
+ font-size: clamp(3.5rem, 8vw, 5.5rem);
+ line-height: 1;
+ margin-bottom: 1.5rem;
+ font-weight: 400;
+ }
+
+ .hero p {
+ font-size: 1.25rem;
+ color: var(--text-muted);
+ margin-bottom: 2.5rem;
+ max-width: 600px;
+ margin-left: auto;
+ margin-right: auto;
+ }
+
+ /* Tagline */
+ .tagline {
+ font-size: 1rem;
+ color: var(--text-muted);
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ margin-bottom: 2rem;
+ }
+
+ .cta-group {
+ display: flex;
+ gap: 1rem;
+ justify-content: center;
+ margin-bottom: 5rem;
+ }
+
+ .btn {
+ padding: 0.8rem 2rem;
+ border-radius: 4px;
+ font-weight: 600;
+ text-decoration: none;
+ font-size: 0.95rem;
+ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ }
+
+ .btn-primary {
+ background-color: var(--accent-violet);
+ color: white;
+ border: 1px solid var(--accent-violet);
+ }
+
+ .btn-primary:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 10px 20px -10px var(--accent-violet);
+ }
+
+ .btn-secondary {
+ color: var(--text-main);
+ border: 1px solid var(--border-color);
+ background: rgba(255,255,255,0.02);
+ }
+
+ .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+
+ /* Feature Cards */
+ .features-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+ gap: 1.5rem;
+ max-width: 1200px;
+ margin: 0 auto;
+ padding: 0 5% 10rem;
+ }
+
+ .card {
+ background: var(--card-bg);
+ border: 1px solid var(--border-color);
+ backdrop-filter: blur(10px);
+ padding: 2.5rem;
+ border-radius: 8px;
+ text-align: left;
+ transition: border-color 0.4s;
+ }
+
+ .card:hover {
+ border-color: rgba(255, 255, 255, 0.3);
+ }
+
+ .card-icon {
+ width: 40px;
+ height: 40px;
+ background: var(--accent-violet);
+ border-radius: 4px;
+ margin-bottom: 1.5rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-family: 'JetBrains Mono', monospace;
+ font-size: 1.2rem;
+ }
+
+ .card h3 {
+ font-size: 1.25rem;
+ margin-bottom: 0.75rem;
+ }
+
+ .card p {
+ color: var(--text-muted);
+ font-size: 0.95rem;
+ }
+
+ /* Micro-Grid Background Pattern */
+ .grid-overlay {
+ position: fixed;
+ top: 0;
+ left: 0;
+ width: 100%;
+ height: 100%;
+ background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+ background-size: 40px 40px;
+ z-index: -2;
+ }
+ </style>
+</head>
+<body>
+
+ <div class="grid-overlay"></div>
+ <div class="glow glow-violet"></div>
+ <div class="glow glow-lime"></div>
+
+ <nav>
+ <div class="logo">
+ <img src="just-logo-myclipq.png" alt="MyClipIQ" style="width: 28px; height: 28px;">
+ MyClipIQ
+ </div>
+ <div class="nav-links">
+ <a href="#">Pricing</a>
+ <a href="#">Showcase</a>
+ <a href="#">Sign In</a>
+ <a href="#" class="btn btn-secondary" style="padding: 0.5rem 1.2rem; margin-left: 1rem;">Get Started</a>
+ </div>
+ </nav>
+
+ <header class="hero">
+ <p class="tagline">Intelligence Awakening. Content Flowing.</p>
+ <h1>The AI Video Editor That Talks Back</h1>
+ <p>Edit videos using natural language. Upload, transcribe, and transform your content with simple commands. No timeline, no complexity.</p>
+ 
+ <div class="cta-group">
+ <a href="#" class="btn btn-primary">Start Editing Free</a>
+ <a href="#" class="btn btn-secondary">See How It Works</a>
+ </div>
+ </header>
+
+ <section class="features-grid">
+ <div class="card">
+ <div class="card-icon">↑</div>
+ <h3>Upload & Transcribe</h3>
+ <p>Drag and drop your video. Auto-transcription with Whisper AI creates searchable timestamps instantly.</p>
+ </div>
+ <div class="card">
+ <div class="card-icon">💬</div>
+ <h3>Chat to Edit</h3>
+ <p>Type commands like "Remove silence" or "Add captions". AI understands and executes instantly.</p>
+ </div>
+ <div class="card">
+ <div class="card-icon">↓</div>
+ <h3>Export Anywhere</h3>
+ <p>Download in multiple formats optimized for YouTube, social media, or professional use.</p>
+ </div>
+ </section>
+
+</body>
+</html>
