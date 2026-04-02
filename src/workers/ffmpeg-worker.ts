@@ -1,4 +1,4 @@
-import Queue from "bull";
+import { Queue } from "bullmq";
 import { Redis } from "ioredis";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { createClient as createSupabaseClient } from "@/lib/supabase/server";
@@ -10,12 +10,15 @@ import * as os from "os";
 
 const execAsync = promisify(exec);
 
-// Redis connection
-const redisConnection = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+// Redis connection for BullMQ
+const redisConnection = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+});
 
 // FFmpeg processing queue
 export const ffmpegQueue = new Queue("video-ffmpeg", {
-  redis: redisConnection,
+  connection: redisConnection,
   defaultJobOptions: {
     attempts: 2,
     backoff: {
@@ -98,7 +101,7 @@ function buildFFmpegCommand(filters: string[], outputParams: Record<string, stri
   return `${filterComplex ? `-vf "${filterComplex}"` : ""} ${params}`;
 }
 
-async function processWithFFmpeg(inputPath: string, outputPath: string, jobData: FFmpegJobData): Promise<void> {
+export async function processWithFFmpeg(inputPath: string, outputPath: string, jobData: FFmpegJobData): Promise<void> {
   const filters: string[] = [];
   const outputParams: Record<string, string> = {};
 
@@ -116,7 +119,6 @@ async function processWithFFmpeg(inputPath: string, outputPath: string, jobData:
       
       case "captions":
         if (cmd.params?.srtKey) {
-          // SRT file should be downloaded first
           filters.push(`subtitles=${cmd.params.srtKey}`);
         }
         break;
@@ -154,85 +156,8 @@ function getFFmpegPreset(format?: string): Record<string, string> {
   }
 }
 
-// Process FFmpeg jobs
-ffmpegQueue.process(async (job, progress) => {
-  const data = job.data as FFmpegJobData;
-  const r2Client = createR2Client();
-  
-  try {
-    await progress(10);
-    console.log(`Starting FFmpeg processing for job ${data.jobId}`);
+// Note: Worker processing is disabled for Vercel serverless
+// For production, use a separate worker service or process inline
+// export const processFFmpegJob = async (data: FFmpegJobData) => { ... }
 
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "clipiq-ffmpeg-"));
-    const inputPath = path.join(tempDir, "input.mp4");
-    const outputPath = path.join(tempDir, "output.mp4");
-
-    try {
-      // Download source video
-      await progress(20);
-      console.log("Downloading source video...");
-      await downloadFromR2(r2Client, data.r2Bucket, data.r2Key, inputPath);
-
-      // If there's an SRT file for captions, download it too
-      if (data.commands.some(c => c.type === "captions" && c.params?.srtKey)) {
-        const srtCmd = data.commands.find(c => c.type === "captions");
-        const srtPath = path.join(tempDir, "subtitles.srt");
-        await downloadFromR2(r2Client, data.r2Bucket, srtCmd!.params.srtKey, srtPath);
-      }
-
-      // Process with FFmpeg
-      await progress(40);
-      console.log("Processing with FFmpeg...");
-      await processWithFFmpeg(inputPath, outputPath, data);
-
-      // Upload processed video
-      await progress(80);
-      console.log("Uploading processed video...");
-      const outputKey = data.r2Key.replace(/\.[^/.]+$/, "") + "_processed.mp4";
-      await uploadToR2(r2Client, data.r2Bucket, outputKey, outputPath, "video/mp4");
-
-      // Update database
-      await progress(90);
-      console.log("Updating database...");
-      const supabase = await createSupabaseClient();
-      await supabase
-        .from("edit_jobs")
-        .update({
-          status: "completed",
-          output_r2_key: outputKey,
-          progress_percent: 100,
-        })
-        .eq("id", data.jobId);
-
-      // Also update video status
-      await supabase
-        .from("videos")
-        .update({
-          status: "processed",
-        })
-        .eq("id", data.videoId);
-
-      await progress(100);
-      console.log(`FFmpeg processing complete for job ${data.jobId}`);
-    } finally {
-      // Cleanup
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
-  } catch (error) {
-    console.error(`FFmpeg processing failed for job ${data.jobId}:`, error);
-    
-    // Update status to failed
-    const supabase = await createSupabaseClient();
-    await supabase
-      .from("edit_jobs")
-      .update({
-        status: "failed",
-        error_message: error instanceof Error ? error.message : "Unknown error",
-      })
-      .eq("id", data.jobId);
-
-    throw error;
-  }
-});
-
-console.log("FFmpeg worker started");
+console.log("FFmpeg queue initialized");
