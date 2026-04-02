@@ -77,7 +77,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid command", details: error.errors },
+        { error: "Invalid command", details: error.issues },
         { status: 400 }
       );
     }
